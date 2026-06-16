@@ -5,8 +5,9 @@ from .models import User
 FIELD_ATTRS = {'class': 'form--control'}
 
 class RegisterForm(UserCreationForm):
+    first_name = forms.CharField(widget=forms.TextInput(attrs={**FIELD_ATTRS, 'placeholder': 'First name'}))
+    last_name = forms.CharField(widget=forms.TextInput(attrs={**FIELD_ATTRS, 'placeholder': 'Last name'}))
     email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={**FIELD_ATTRS, 'placeholder': 'Your email'}))
-    username = forms.CharField(widget=forms.TextInput(attrs={**FIELD_ATTRS, 'placeholder': 'Your username'}))
     password1 = forms.CharField(widget=forms.PasswordInput(attrs={**FIELD_ATTRS, 'placeholder': 'Your password', 'autocomplete': 'off'}))
     password2 = forms.CharField(widget=forms.PasswordInput(attrs={**FIELD_ATTRS, 'placeholder': 'Confirm password'}))
     referral_code = forms.CharField(max_length=20, required=False,
@@ -14,11 +15,20 @@ class RegisterForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password1', 'password2', 'referral_code']
+        fields = ['first_name', 'last_name', 'email', 'password1', 'password2', 'referral_code']
 
     def save(self, commit=True):
         user = super().save(commit=False)
+        user.first_name = self.cleaned_data['first_name']
+        user.last_name = self.cleaned_data['last_name']
         user.email = self.cleaned_data['email']
+        # Auto-generate a unique username from first+last name
+        import uuid
+        base = f"{self.cleaned_data['first_name']}{self.cleaned_data['last_name']}".lower().replace(' ', '')
+        username = base
+        while User.objects.filter(username=username).exists():
+            username = f"{base}{str(uuid.uuid4())[:5]}"
+        user.username = username
         ref_code = self.cleaned_data.get('referral_code')
         if ref_code:
             try:

@@ -1,0 +1,12 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<h2>New Sign-In Detected</h2>
+<p>Hi {{ user.first_name|default:user.username }}, we noticed a new sign-in to your account.</p>
+<div class="info-box">
+  <p><strong>Account:</strong> {{ user.email }}</p>
+  <p><strong>IP Address:</strong> {{ ip }}</p>
+  <p><strong>Device:</strong> {{ device|truncatechars:80 }}</p>
+</div>
+<p>If this was you, no action is needed. If you did not sign in, please <strong>change your password immediately</strong>.</p>
+<a href="/accounts/change-password/" class="btn">Change Password</a>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<h2>New Deposit Request</h2>
+<p>A user has submitted a deposit request that requires your review.</p>
+<div class="info-box">
+  <p><strong>User:</strong> {{ user.get_full_name|default:user.username }}</p>
+  <p><strong>Email:</strong> {{ user.email }}</p>
+  <p><strong>Coin:</strong> {{ deposit.coin }}</p>
+  <p><strong>Amount:</strong> {{ deposit.amount }} {{ deposit.coin }}</p>
+  <p><strong>Status:</strong> <span class="badge badge-pending">Pending</span></p>
+  <p><strong>Date:</strong> {{ deposit.created_at|date:"F j, Y — H:i" }} UTC</p>
+</div>
+<a href="/admin/dashboard/deposit/" class="btn">Review in Admin</a>
+{% endblock %}

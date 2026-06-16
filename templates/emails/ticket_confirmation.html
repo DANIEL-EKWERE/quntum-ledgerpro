@@ -1,0 +1,14 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<h2>Support Ticket #{{ ticket.pk }} Received</h2>
+<p>Hi {{ user.first_name|default:user.username }}, we have received your support request and our team will respond shortly.</p>
+<div class="info-box">
+  <p><strong>Ticket #:</strong> {{ ticket.pk }}</p>
+  <p><strong>Subject:</strong> {{ ticket.subject }}</p>
+  <p><strong>Priority:</strong> {{ ticket.get_priority_display }}</p>
+  <p><strong>Status:</strong> <span class="badge badge-pending">Open</span></p>
+  <p><strong>Submitted:</strong> {{ ticket.created_at|date:"F j, Y — H:i" }} UTC</p>
+</div>
+<p>We aim to respond to all tickets within 24 hours. You can track the status of your ticket from your dashboard.</p>
+<a href="/dashboard/tickets/" class="btn">View My Tickets</a>
+{% endblock %}

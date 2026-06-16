@@ -1,0 +1,15 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<h2>New Withdrawal Request</h2>
+<p>A user has submitted a withdrawal request that requires your review.</p>
+<div class="info-box">
+  <p><strong>User:</strong> {{ user.get_full_name|default:user.username }}</p>
+  <p><strong>Email:</strong> {{ user.email }}</p>
+  <p><strong>Coin:</strong> {{ withdrawal.coin }}</p>
+  <p><strong>Amount:</strong> {{ withdrawal.amount }} {{ withdrawal.coin }}</p>
+  <p><strong>Address:</strong> {{ withdrawal.address }}</p>
+  <p><strong>Status:</strong> <span class="badge badge-pending">Pending</span></p>
+  <p><strong>Date:</strong> {{ withdrawal.created_at|date:"F j, Y — H:i" }} UTC</p>
+</div>
+<a href="/admin/dashboard/withdrawal/" class="btn">Review in Admin</a>
+{% endblock %}

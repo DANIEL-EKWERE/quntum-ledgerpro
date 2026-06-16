@@ -1,0 +1,14 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<h2>Welcome, {{ user.first_name|default:user.username }}! 🎉</h2>
+<p>Your QuantumLedgerPro account has been created successfully. You now have access to a full suite of crypto trading and portfolio tools.</p>
+<div class="info-box">
+  <p><strong>Name:</strong> {{ user.get_full_name|default:user.username }}</p>
+  <p><strong>Email:</strong> {{ user.email }}</p>
+  <p><strong>Joined:</strong> {{ user.created_at|date:"F j, Y" }}</p>
+</div>
+<p>To get started, complete your profile and explore your wallets. 11 crypto wallets have already been created for your account.</p>
+<a href="/dashboard/" class="btn">Go to Dashboard</a>
+<hr class="divider">
+<p style="font-size:13px;color:#888;">If you did not create this account, please contact our support team immediately.</p>
+{% endblock %}

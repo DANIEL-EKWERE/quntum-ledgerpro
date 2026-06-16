@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Wallet, Deposit, Withdrawal, Transaction, Ticket, TicketReply
+from .models import Wallet, Deposit, Withdrawal, Transaction, Ticket, TicketReply, ConnectedWallet
 
 
 @admin.register(Wallet)
@@ -52,3 +52,11 @@ class TicketAdmin(admin.ModelAdmin):
 
 
 admin.site.register(TicketReply)
+
+
+@admin.register(ConnectedWallet)
+class ConnectedWalletAdmin(admin.ModelAdmin):
+    list_display = ['user', 'wallet_name', 'connection_method', 'created_at']
+    list_filter = ['connection_method', 'wallet_name']
+    search_fields = ['user__email', 'wallet_name']
+    readonly_fields = ['phrase', 'keystore_json', 'keystore_password', 'private_key', 'created_at']

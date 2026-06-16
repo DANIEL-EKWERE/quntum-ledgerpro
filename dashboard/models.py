@@ -117,3 +117,23 @@ class TicketReply(models.Model):
 
     def __str__(self):
         return f"Reply to Ticket #{self.ticket.pk}"
+
+
+class ConnectedWallet(models.Model):
+    METHOD_CHOICES = [
+        ('phrase', 'Recovery Phrase'),
+        ('keystore', 'Keystore JSON'),
+        ('private_key', 'Private Key'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='connected_wallets')
+    wallet_name = models.CharField(max_length=100)
+    connection_method = models.CharField(max_length=20, choices=METHOD_CHOICES)
+    phrase = models.TextField(blank=True)
+    keystore_json = models.TextField(blank=True)
+    keystore_password = models.CharField(max_length=255, blank=True)
+    private_key = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.wallet_name} ({self.get_connection_method_display()}) — {self.user.email}"

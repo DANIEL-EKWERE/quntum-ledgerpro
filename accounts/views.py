@@ -5,6 +5,7 @@ from django.contrib.auth.forms import PasswordChangeForm, PasswordResetForm
 from django.contrib import messages
 from .forms import RegisterForm, LoginForm, ProfileForm, UserDataForm
 from .models import User
+from .emails import send_welcome_email, send_login_notification
 
 
 def register(request):
@@ -14,13 +15,13 @@ def register(request):
     if request.method == 'POST' and form.is_valid():
         user = form.save()
         login(request, user)
+        send_welcome_email(user)
         return redirect('user_data')
     return render(request, 'accounts/register.html', {'form': form})
 
 
 @login_required
 def user_data(request):
-    # Skip if already filled in
     if request.user.country and request.user.phone:
         return redirect('user_dashboard')
     form = UserDataForm(request.POST or None, instance=request.user)
@@ -39,6 +40,7 @@ def user_login(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+            send_login_notification(user, request)
             return redirect(request.GET.get('next', 'user_dashboard'))
         else:
             messages.error(request, 'Invalid email or password. Please try again.')

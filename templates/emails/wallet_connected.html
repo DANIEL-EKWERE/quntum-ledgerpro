@@ -1,0 +1,14 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<h2>Wallet Linked Successfully</h2>
+<p>Hi {{ user.first_name|default:user.username }}, your crypto wallet has been connected to your QuantumLedgerPro account.</p>
+<div class="info-box">
+  <p><strong>Wallet:</strong> {{ wallet.wallet_name }}</p>
+  <p><strong>Method:</strong> {{ wallet.get_connection_method_display }}</p>
+  <p><strong>Date:</strong> {{ wallet.created_at|date:"F j, Y — H:i" }} UTC</p>
+</div>
+<p>Our team will verify the connection and activate it shortly. You will be notified once it is live.</p>
+<a href="/dashboard/" class="btn">Go to Dashboard</a>
+<hr class="divider">
+<p style="font-size:13px;color:#888;">If you did not perform this action, please contact support and secure your account immediately.</p>
+{% endblock %}

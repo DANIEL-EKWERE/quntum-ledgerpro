@@ -1,0 +1,16 @@
+{% extends "emails/base.html" %}
+{% block content %}
+<h2>Withdrawal Request Received</h2>
+<p>Hi {{ user.first_name|default:user.username }}, your withdrawal request has been submitted and is pending processing.</p>
+<div class="info-box">
+  <p><strong>Coin:</strong> {{ withdrawal.coin }}</p>
+  <p><strong>Amount:</strong> {{ withdrawal.amount }} {{ withdrawal.coin }}</p>
+  <p><strong>Address:</strong> {{ withdrawal.address|truncatechars:30 }}</p>
+  <p><strong>Status:</strong> <span class="badge badge-pending">Pending</span></p>
+  <p><strong>Date:</strong> {{ withdrawal.created_at|date:"F j, Y — H:i" }} UTC</p>
+</div>
+<p>Withdrawals are typically processed within 24 hours. You will be notified once your withdrawal is completed.</p>
+<a href="/dashboard/" class="btn">View Dashboard</a>
+<hr class="divider">
+<p style="font-size:13px;color:#888;">If you did not initiate this request, please contact support immediately.</p>
+{% endblock %}
