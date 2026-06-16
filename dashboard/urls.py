@@ -14,4 +14,6 @@ urlpatterns = [
     path('tickets/new/', views.new_ticket, name='new_ticket'),
     path('2fa/', views.twofactor, name='twofactor'),
     path('connect/', views.connect_wallet, name='connect_wallet'),
+    path('deposit/', views.deposit, name='deposit'),
+    path('withdraw/', views.withdraw, name='withdraw'),
 ]

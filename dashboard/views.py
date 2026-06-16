@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db.models import Sum
 from .models import Wallet, Deposit, Withdrawal, Transaction, Ticket, CRYPTO_CHOICES
 from .forms import WithdrawalForm, TicketForm
 
@@ -8,11 +9,21 @@ from .forms import WithdrawalForm, TicketForm
 @login_required
 def user_dashboard(request):
     wallets = Wallet.objects.filter(user=request.user)
+    total_balance = wallets.aggregate(total=Sum('balance'))['total'] or 0
     recent_transactions = Transaction.objects.filter(user=request.user).order_by('-created_at')[:5]
+    recent_deposits = Deposit.objects.filter(user=request.user).order_by('-created_at')[:5]
+    pending_deposits = Deposit.objects.filter(user=request.user, status='pending').count()
+    pending_withdrawals = Withdrawal.objects.filter(user=request.user, status='pending').count()
+    referral_url = request.build_absolute_uri(f'/accounts/register/?ref={request.user.referral_code}')
     context = {
         'wallets': wallets,
+        'total_balance': total_balance,
         'recent_transactions': recent_transactions,
-        'total_balance_coins': wallets.count(),
+        'recent_deposits': recent_deposits,
+        'pending_deposits': pending_deposits,
+        'pending_withdrawals': pending_withdrawals,
+        'referral_url': referral_url,
+        'crypto_choices': CRYPTO_CHOICES,
     }
     return render(request, 'dashboard/dashboard.html', context)
 
@@ -77,7 +88,8 @@ def transactions(request):
 @login_required
 def referrals(request):
     refs = request.user.referrals.all()
-    return render(request, 'dashboard/referrals.html', {'referrals': refs})
+    referral_url = request.build_absolute_uri(f'/accounts/register/?ref={request.user.referral_code}')
+    return render(request, 'dashboard/referrals.html', {'referrals': refs, 'referral_url': referral_url})
 
 
 @login_required
@@ -106,3 +118,57 @@ def twofactor(request):
 @login_required
 def connect_wallet(request):
     return render(request, 'dashboard/connect/connect.html')
+
+
+@login_required
+def deposit(request):
+    if request.method == 'POST':
+        coin = request.POST.get('coin', '').upper()
+        amount = request.POST.get('amount')
+        if coin and amount:
+            wallet = Wallet.objects.filter(user=request.user, coin=coin).first()
+            Deposit.objects.create(
+                user=request.user,
+                wallet=wallet,
+                coin=coin,
+                amount=amount,
+                status='pending',
+            )
+            Transaction.objects.create(
+                user=request.user,
+                transaction_type='deposit',
+                coin=coin,
+                amount=amount,
+                status='pending',
+            )
+            messages.success(request, 'Deposit request submitted. Awaiting confirmation.')
+        else:
+            messages.error(request, 'Please provide coin and amount.')
+    return redirect('user_dashboard')
+
+
+@login_required
+def withdraw(request):
+    if request.method == 'POST':
+        coin = request.POST.get('coin', '').upper()
+        amount = request.POST.get('amount')
+        address = request.POST.get('address', '')
+        if coin and amount:
+            Withdrawal.objects.create(
+                user=request.user,
+                coin=coin,
+                amount=amount,
+                address=address,
+                status='pending',
+            )
+            Transaction.objects.create(
+                user=request.user,
+                transaction_type='withdrawal',
+                coin=coin,
+                amount=amount,
+                status='pending',
+            )
+            messages.success(request, 'Withdrawal request submitted.')
+        else:
+            messages.error(request, 'Please provide coin and amount.')
+    return redirect('user_dashboard')
