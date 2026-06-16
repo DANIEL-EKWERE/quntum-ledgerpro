@@ -1,4 +1,16 @@
 from django.shortcuts import render
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+import re
+
+
+@require_POST
+def subscribe(request):
+    email = request.POST.get('email', '').strip()
+    if not email or not re.match(r'^[^@]+@[^@]+\.[^@]+$', email):
+        return JsonResponse({'success': False, 'message': 'Please enter a valid email address.'})
+    # TODO: save to DB or send to mailing list
+    return JsonResponse({'success': True, 'message': 'Thank you for subscribing!'})
 
 
 def index(request):
