@@ -35,10 +35,13 @@ def user_login(request):
     if request.user.is_authenticated:
         return redirect('user_dashboard')
     form = LoginForm(request, data=request.POST or None)
-    if request.method == 'POST' and form.is_valid():
-        user = form.get_user()
-        login(request, user)
-        return redirect(request.GET.get('next', 'user_dashboard'))
+    if request.method == 'POST':
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            return redirect(request.GET.get('next', 'user_dashboard'))
+        else:
+            messages.error(request, 'Invalid email or password. Please try again.')
     return render(request, 'accounts/login.html', {'form': form})
 
 
