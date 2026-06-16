@@ -53,12 +53,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'quntumledgerpro.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.parse('postgresql://quantum_ledger_db_user:IsRbb6hhDVAjXjYGtFmrnBNYt2wvnGkQ@dpg-d8om2aj6sc1c73bto2s0-a.oregon-postgres.render.com/quantum_ledger_db')
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
